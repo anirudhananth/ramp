@@ -1,11 +1,13 @@
 import { useState } from "react"
 import { InputCheckbox } from "../InputCheckbox"
 import { TransactionPaneComponent } from "./types"
+import { setTransactionApproval } from "src/utils/requests"
 
 export const TransactionPane: TransactionPaneComponent = ({
   transaction,
   loading,
   setTransactionApproval: consumerSetTransactionApproval,
+  setModifiedTransactions
 }) => {
   const [approved, setApproved] = useState(transaction.approved)
 
@@ -22,7 +24,12 @@ export const TransactionPane: TransactionPaneComponent = ({
         id={transaction.id}
         checked={approved}
         disabled={loading}
-        onChange={async (newValue) => {
+        onChange={async (newValue: boolean) => {
+          setModifiedTransactions((prev: Record<string, boolean>) => ({
+            ...prev,
+            [transaction.id]: newValue,
+          }));
+
           await consumerSetTransactionApproval({
             transactionId: transaction.id,
             newValue,

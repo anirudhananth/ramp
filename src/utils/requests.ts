@@ -48,7 +48,7 @@ export const getTransactionsByEmployee = ({ employeeId }: RequestByEmployeeParam
 }
 
 export const setTransactionApproval = ({ transactionId, value }: SetTransactionApprovalParams): void => {
-  const transaction = data.transactions.find(
+  let transaction = data.transactions.find(
     (currentTransaction) => currentTransaction.id === transactionId
   )
 
