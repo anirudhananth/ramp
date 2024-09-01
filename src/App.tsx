@@ -6,18 +6,34 @@ import { useEmployees } from "./hooks/useEmployees"
 import { usePaginatedTransactions } from "./hooks/usePaginatedTransactions"
 import { useTransactionsByEmployee } from "./hooks/useTransactionsByEmployee"
 import { EMPTY_EMPLOYEE } from "./utils/constants"
-import { Employee } from "./utils/types"
+import { Employee, Transaction } from "./utils/types"
 
 export function App() {
   const { data: employees, ...employeeUtils } = useEmployees()
   const { data: paginatedTransactions, ...paginatedTransactionsUtils } = usePaginatedTransactions()
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
+  const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
 
-  const transactions = useMemo(
-    () => paginatedTransactions?.data ?? transactionsByEmployee ?? null,
-    [paginatedTransactions, transactionsByEmployee]
-  )
+  useEffect(() => {
+    const data = paginatedTransactions?.data ?? transactionsByEmployee ?? null
+
+    if (data && data.length > 0) {
+      setTransactions(currentTransactions => [...currentTransactions, ...data])
+    }
+  }, [paginatedTransactions, transactionsByEmployee])
+
+
+  // const transactions = useMemo(
+  //   () => {
+  //     console.log('paginatedTransactions', paginatedTransactions)
+  //     const data = paginatedTransactions?.data ?? transactionsByEmployee ?? null
+  //     const paginatedData = paginatedTransactions?.data ?? []
+  //     const employeeData = transactionsByEmployee ?? []
+  //     // return currentEmployeeId === null ? [...paginatedData] : [...employeeData]
+  //   }, [paginatedTransactions, transactionsByEmployee]
+  // )
 
   const loadAllTransactions = useCallback(async () => {
     setIsLoading(true)
@@ -61,6 +77,7 @@ export function App() {
             label: `${item.firstName} ${item.lastName}`,
           })}
           onChange={async (newValue) => {
+            setCurrentEmployeeId(newValue === EMPTY_EMPLOYEE ? null : newValue!.id)
             if (newValue === null) {
               return
             }
@@ -84,7 +101,11 @@ export function App() {
               className="RampButton"
               disabled={paginatedTransactionsUtils.loading}
               onClick={async () => {
-                await loadAllTransactions()
+                if (currentEmployeeId === null) {
+                  await loadAllTransactions()
+                  return
+                }
+                await loadTransactionsByEmployee(currentEmployeeId)
               }}
             >
               View More
